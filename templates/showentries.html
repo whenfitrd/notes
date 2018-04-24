@@ -1,0 +1,62 @@
+{% extends 'bootstrap/base.html' %}
+{% block html_attribs %} lang="zh-CN" {% endblock %}
+{% block title %}Nodes{% endblock %}
+{% block metas %}
+{{ super() }}
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+{% endblock %}
+{% block styles %}
+{{ super() }}
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='ie10-viewport-bug-workaround.css') }}">
+{% endblock %}
+{% block body %}
+{% block navbar %}
+
+{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row clearfix">
+    	<div class="col-md-12 column">
+    		<ul class="nav nav-tabs">
+    			<li class="active">
+    				 <a href="#">我要做的事情</a>
+    			</li>
+    			<li>
+    				 <a href="{{ url_for('views.add_entry') }}">添加事情</a>
+    			</li>
+    			<!-- <li class="disabled">
+    				 <a href="#">信息</a>
+    			</li> -->
+                <li class="pull-right">
+                    {% if not session.logged_in %}
+                      <a href="{{ url_for('views.login') }}">登入</a>
+                    {% else %}
+                      <a href="{{ url_for('views.logout') }}">登出</a>
+                    {% endif %}
+                </li>
+    		</ul>
+    	</div>
+    </div>
+    {% for entry in entries %}
+        <div class="row clearfix">
+          <div class="col-md-12 column">
+              <h2>{{ entry.title }}</h2>
+              <p>{{ entry.text|safe }}</p>
+              <p class="pull-right">
+                  <a class="btn" href="{{ url_for('views.del_entry', id=entry.id) }}">删除</a>
+                  创建时间：{{ entry.createtime|safe }}
+              </p>
+          </div>
+        </div>
+    {% else %}
+      <li><em>Unbelievable.  No entries here so far</em>
+    {% endfor %}
+</div>
+{% block page_content %}
+{% endblock %}
+{% endblock %}
+{% block footer %}
+{% endblock %}
+{% endblock %}

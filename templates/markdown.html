@@ -1,0 +1,13 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title%}Notes{% endblock %}<!--覆盖title标签-->
+
+{% block navbar %}
+<nav class="navbar navbar-inverse"><!-- 导航部分 -->
+ 导航
+</nav>
+{% endblock %}
+{% block content %} <!--具体内容-->
+    {{ wtf.quick_form(form) }}
+{% endblock %}

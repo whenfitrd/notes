@@ -1,0 +1,43 @@
+{% extends 'bootstrap/base.html' %}
+{% block html_attribs %} lang="zh-CN" {% endblock %}
+{% block title %}Nodes{% endblock %}
+{% block metas %}
+{{ super() }}
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+{% endblock %}
+{% block styles %}
+{{ super() }}
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='ie10-viewport-bug-workaround.css') }}">
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='signin.css') }}">
+{% endblock %}
+{% block body %}
+{% block navbar %}
+{% endblock %}
+{% block content %}
+<div class="container">
+
+  <form action="{{ url_for('views.register') }}" class="form-signin" method="POST">
+    <h2 class="form-signin-heading">注册</h2>
+    <label for="inputAccount" class="sr-only">Account</label>
+    <input name="username" type="account" id="inputAccount" class="form-control" placeholder="账号" pattern="[0-9a-zA-Z]+" oninvalid="setCustomValidity('请使用正确的账号格式');" autofocus>
+    <label for="inputPassword" class="sr-only">Password</label>
+    <input name="password" type="password" id="inputPassword" class="form-control" placeholder="密码" pattern="[0-9a-zA-Z]+" oninvalid="setCustomValidity('请使用正确的密码格式');">
+    <label for="repeatPassword" class="sr-only">Repetition</label>
+    <input name="repetition" type="password" id="repeatPassword" class="form-control" placeholder="重复密码" pattern="[0-9a-zA-Z]+" oninvalid="setCustomValidity('请使用正确的密码格式');">
+    <button class="btn btn-lg btn-primary btn-block" type="submit">注册</button>
+    <a class="pull-right" href="{{ url_for('views.login') }}">登入</a>
+    {% for message in get_flashed_messages() %}
+      <div class=flash>{{ message }}</div>
+    {% endfor %}
+  </form>
+
+</div> <!-- /container -->
+{% block page_content %}
+{% endblock %}
+{% endblock %}
+{% block footer %}
+{% endblock %}
+{% endblock %}

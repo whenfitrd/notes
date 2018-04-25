@@ -1,3 +1,6 @@
+#! /usr/bin/env python3
+#coding=utf-8
+
 from flask import render_template, request, g, session, redirect,\
     abort, flash, url_for
 import pymysql
@@ -15,11 +18,18 @@ views = Blueprint('views', __name__)
 
 from config import Config
 
+from mylogger import Logger
+
+mylogger = Logger().getLogger()
+
 def connect_db():
-    db = pymysql.connect(host=Config.host, user=Config.user,\
-    passwd=Config.passwd, db=Config.dbname, use_unicode=True, charset='utf8')
-    cur = db.cursor()
-    return db, cur
+    try:
+        db = pymysql.connect(host=Config.host, user=Config.user,\
+        passwd=Config.passwd, db=Config.dbname, use_unicode=True, charset='utf8')
+        cur = db.cursor()
+        return db, cur
+    except Exception as e:
+        mylogger.error(str(e))
 
 @views.before_request
 def before_request():
@@ -43,7 +53,11 @@ def show_entries():
     if not session.get('aeskey'):
         abort(401)
     sql = "select id, title, content, createtime from entries where user_id=%s order by id desc"
-    statu = g.cur.execute(sql, str(session['user_id']))
+    try:
+        statu = g.cur.execute(sql, str(session['user_id']))
+    except Exception as e:
+        mylogger.error(str(e))
+        abort(401)
     entries = [dict(id=row[0], title=decrypt(row[1], session['aeskey']).decode('utf-8'),\
     text=decrypt(row[2], session['aeskey']).decode('utf-8'), createtime=row[3])\
     for row in g.cur.fetchall()]
@@ -56,11 +70,14 @@ def add_entry():
             abort(401)
         if not session.get('aeskey'):
             abort(401)
-        print('提交')
-        print(request.form)
-        g.cur.execute('insert into entries (user_id, title, content) values (%s, %s, %s)',\
-        [str(session['user_id']), encrypt(request.form['title'], session['aeskey']), encrypt(request.form['text'], session['aeskey'])])
-        g.db.commit()
+        try:
+            g.cur.execute('insert into entries (user_id, title, content) values (%s, %s, %s)',\
+            [str(session['user_id']), encrypt(request.form['title'], session['aeskey']), encrypt(request.form['text'], session['aeskey'])])
+            g.db.commit()
+        except Exception as e:
+            mylogger.error(str(e))
+            g.db.rollback()
+            return render_template('addentry.html')
         flash('提交成功')
         return redirect(url_for('views.show_entries'))
     return render_template('addentry.html')
@@ -71,9 +88,13 @@ def del_entry(id):
         abort(401)
     if not session.get('aeskey'):
         abort(401)
-    g.cur.execute('delete from entries where id=%s', [id])
-    g.db.commit()
-    flash('删除成功')
+    try:
+        g.cur.execute('delete from entries where id=%s', [id])
+        g.db.commit()
+        flash('删除成功')
+    except Exception as e:
+        mylogger.error(str(e))
+        g.db.rollback()
     return redirect(url_for('views.show_entries'))
 
 @views.route('/register', methods=['GET', 'POST'])
@@ -88,10 +109,9 @@ def register():
             g.db.commit()
             return render_template('login.html')
         except Exception as e:
-            print(str(e))
+            mylogger.error(str(e))
             g.db.rollback()
             flash('注册失败')
-            return render_template('register.html')
     return render_template('register.html')
 
 @views.route('/login', methods=['GET', 'POST'])
@@ -107,20 +127,21 @@ def login():
                 session['user_id'] = results[0][0]
                 session['aeskey'] = results[0][3]
                 flash('You were logged in')
+                mylogger.info(str(session['user_id'])+": 登入成功")
                 return redirect(url_for('views.show_entries'))
             else:
                 flash('Invalid username/password')
-                error = 'Invalid username/password'
-            g.db.commit()
         except Exception as e:
-            print(str(e))
+            mylogger.error(str(e))
             g.db.rollback()
-    return render_template('login.html', error=error)
+    return render_template('login.html')
 
 @views.route('/logout')
 def logout():
+    mylogger.info(str(session['user_id'])+": 登出")
     session.pop('logged_in', None)
     session.pop('user_id', None)
+    session.pop('aeskey', None)
     flash('you are logged out')
     return redirect(url_for('views.login'))
 

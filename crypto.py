@@ -1,3 +1,6 @@
+#! /usr/bin/env python3
+#coding=utf-8
+
 from Crypto.Hash import MD5
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -27,16 +30,7 @@ def utf8len(s):
 
 pad = lambda s: s + (length - utf8len(s) % length) * chr(length - utf8len(s) % length)
 
-# def pad(msg):
-#     msg = msg + (length - len(msg) % length) * str(length - len(msg) % length)
-#     return msg.encode('utf-8')
-
 unpad = lambda s: s[0:-ord(chr(s[-1]))]
-
-# def unpad(msg):
-#     while msg[-1] == '{':
-#         msg = msg[:-1]
-#         print(len(msg))
 
 def encrypt(msg, key):
     key = base64.b64decode(key)

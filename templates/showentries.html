@@ -23,9 +23,6 @@
     			<li class="active">
     				 <a href="#">我要做的事情</a>
     			</li>
-    			<li>
-    				 <a href="{{ url_for('views.add_entry') }}">添加事情</a>
-    			</li>
     			<!-- <li class="disabled">
     				 <a href="#">信息</a>
     			</li> -->
@@ -39,12 +36,25 @@
     		</ul>
     	</div>
     </div>
+    <div class="row clearfix">
+		<div class="col-md-12 column">
+            <h2></h2>
+		</div>
+	</div>
+    <div class="row clearfix">
+        <form action="{{ url_for('views.add_entry') }}" method="GET" role="form">
+    		<div class="col-md-12 column">
+    			 <button type="submit" class="btn btn-default btn-danger pull-right">添加事情</button>
+    		</div>
+        </form>
+	</div>
     {% for entry in entries %}
         <div class="row clearfix">
           <div class="col-md-12 column">
               <h2>{{ entry.title }}</h2>
               <p>{{ entry.text|safe }}</p>
               <p class="pull-right">
+                  <a class="btn" href="{{ url_for('views.edit_entry', id=entry.id) }}">编辑</a>
                   <a class="btn" href="{{ url_for('views.del_entry', id=entry.id) }}">删除</a>
                   创建时间：{{ entry.createtime|safe }}
               </p>

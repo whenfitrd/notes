@@ -55,12 +55,12 @@ def show_entries():
     sql = "select id, title, content, createtime from entries where user_id=%s order by id desc"
     try:
         statu = g.cur.execute(sql, str(session['user_id']))
+        entries = [dict(id=row[0], title=decrypt(row[1], session['aeskey']).decode('utf-8'),\
+        text=decrypt(row[2], session['aeskey']).decode('utf-8'), createtime=row[3])\
+        for row in g.cur.fetchall()]
     except Exception as e:
         mylogger.error(str(e))
         abort(401)
-    entries = [dict(id=row[0], title=decrypt(row[1], session['aeskey']).decode('utf-8'),\
-    text=decrypt(row[2], session['aeskey']).decode('utf-8'), createtime=row[3])\
-    for row in g.cur.fetchall()]
     return render_template('showentries.html', entries=entries)
 
 @views.route('/addentry', methods=['POST', 'GET'])
@@ -81,6 +81,38 @@ def add_entry():
         flash('提交成功')
         return redirect(url_for('views.show_entries'))
     return render_template('addentry.html')
+
+@views.route('/editentry', methods=['POST'])
+def update_entry():
+    if not session.get('logged_in'):
+        abort(401)
+    if not session.get('aeskey'):
+        abort(401)
+    sql = "update entries set title=%s, content=%s where id=%s"
+    try:
+        g.cur.execute(sql, [encrypt(request.form['title'], session['aeskey']), encrypt(request.form['text'], session['aeskey']), request.form['id']])
+        g.db.commit()
+    except Exception as e:
+        mylogger.error(str(e))
+        g.db.rollback()
+    return redirect(url_for('views.show_entries'))
+
+@views.route('/editentry/<int:id>', methods=['GET'])
+def edit_entry(id):
+    if not session.get('logged_in'):
+        abort(401)
+    if not session.get('aeskey'):
+        abort(401)
+    sql = "select id, title, content, createtime from entries where id=%s"
+    try:
+        statu = g.cur.execute(sql, [id])
+        entries = [dict(id=row[0], title=decrypt(row[1], session['aeskey']).decode('utf-8'),\
+        text=decrypt(row[2], session['aeskey']).decode('utf-8'), createtime=row[3])\
+        for row in g.cur.fetchall()]
+    except Exception as e:
+        mylogger.error(str(e))
+        abort(401)
+    return render_template('addentry.html', entry=entries[0])
 
 @views.route('/del/<int:id>', methods=['GET'])
 def del_entry(id):

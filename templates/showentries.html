@@ -42,11 +42,20 @@
 		</div>
 	</div>
     <div class="row clearfix">
-        <form action="{{ url_for('views.add_entry') }}" method="GET" role="form">
-    		<div class="col-md-12 column">
+        <div class="col-md-12 column">
+            <form action="{{ url_for('views.search', currentpage=1) }}" method="POST" class="navbar-form navbar-left" role="search">
+    			<div class="form-group">
+                    {% if session['searchkey'] %}
+                        <input name="search" type="text" class="form-control" value={{ session['searchkey'] }}>
+                    {% else %}
+                        <input name="search" type="text" class="form-control">
+                    {% endif %}
+    			</div> <button type="submit" class="btn btn-default">搜索</button>
+    		</form>
+            <form action="{{ url_for('views.add_entry') }}" class="navbar-form navbar-right" method="GET" role="form">
     			 <button type="submit" class="btn btn-default btn-danger pull-right">添加事情</button>
-    		</div>
-        </form>
+            </form>
+        </div>
 	</div>
     {% if entries %}
         {% for i in range(5) %}

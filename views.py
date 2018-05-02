@@ -44,14 +44,21 @@ def teardown_request(exception):
 def index():
     return render_template('login.html')
 
+@views.route('/showentries', methods=['GET'])
 @views.route('/showentries/<int:currentpage>', methods=['GET'])
-def show_entries(currentpage):
+def show_entries(currentpage=1):
     if not session.get('logged_in'):
         abort(401)
     if not session.get('user_id'):
         abort(401)
     if not session.get('aeskey'):
         abort(401)
+
+    if session.get('search') and session.get('entries') and session['search']:
+        entries = session['entries']
+        session['maxpage'] = (len(entries)-1)//5+1
+        return render_template('showentries.html', entries=entries, currentpage=currentpage, maxpage=session['maxpage'])
+
     sql = "select id, title, content, createtime from entries where user_id=%s order by id desc"
     try:
         statu = g.cur.execute(sql, str(session['user_id']))
@@ -88,6 +95,43 @@ def next_page():
         session['currentpage'] += 1
     return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
 
+@views.route('/search', methods=['POST'])
+def search():
+    if not session.get('logged_in'):
+        abort(401)
+    if not session.get('user_id'):
+        abort(401)
+    if not session.get('aeskey'):
+        abort(401)
+
+    if request.form['search'] is None:
+        redirect(url_for('views.show_entries', currentpage=session['currentpage']))
+
+    sql = "select id, title, content, createtime from entries where user_id=%s order by id desc"
+    try:
+        statu = g.cur.execute(sql, str(session['user_id']))
+        entries = [dict(id=row[0], title=decrypt(row[1], session['aeskey']).decode('utf-8'),\
+        text=decrypt(row[2], session['aeskey']).decode('utf-8'), createtime=row[3])\
+        for row in g.cur.fetchall()]
+    except Exception as e:
+        mylogger.error(str(e))
+        abort(401)
+    searchlist = list()
+    for entry in entries:
+        if request.form['search'] in entry['title'] or request.form['search'] in entry['text']:
+            searchlist.append(entry)
+
+    if not session.get('search'):
+        session['search'] = False
+
+    session['entries'] = searchlist
+    session['currentpage'] = 1
+    session['search'] = True
+    session['searchkey'] = request.form['search']
+
+    session['maxpage'] = (len(searchlist)-1)//5+1
+
+    return render_template('showentries.html', entries=searchlist, currentpage=session['currentpage'], maxpage=session['maxpage'])
 
 @views.route('/addentry', methods=['POST', 'GET'])
 def add_entry():
@@ -203,6 +247,8 @@ def logout():
     session.pop('aeskey', None)
     session.pop('currentpage', None)
     session.pop('maxpage', None)
+    session.pop('search', None)
+    session.pop('searchkey', None)
     flash('you are logged out')
     return redirect(url_for('views.login'))
 

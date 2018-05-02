@@ -44,8 +44,8 @@ def teardown_request(exception):
 def index():
     return render_template('login.html')
 
-@views.route('/showentries')
-def show_entries():
+@views.route('/showentries/<int:currentpage>', methods=['GET'])
+def show_entries(currentpage):
     if not session.get('logged_in'):
         abort(401)
     if not session.get('user_id'):
@@ -61,7 +61,33 @@ def show_entries():
     except Exception as e:
         mylogger.error(str(e))
         abort(401)
-    return render_template('showentries.html', entries=entries)
+    session['maxpage'] = (len(entries)-1)//5+1
+    return render_template('showentries.html', entries=entries, currentpage=currentpage, maxpage=session['maxpage'])
+
+@views.route('/prepage', methods=['GET'])
+def pre_page():
+    if not session.get('logged_in'):
+        abort(401)
+    if not session.get('user_id'):
+        abort(401)
+    if not session.get('aeskey'):
+        abort(401)
+    if session['currentpage'] > 1:
+        session['currentpage'] -= 1
+    return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
+
+@views.route('/nextpage', methods=['GET'])
+def next_page():
+    if not session.get('logged_in'):
+        abort(401)
+    if not session.get('user_id'):
+        abort(401)
+    if not session.get('aeskey'):
+        abort(401)
+    if session['currentpage'] < session['maxpage']:
+        session['currentpage'] += 1
+    return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
+
 
 @views.route('/addentry', methods=['POST', 'GET'])
 def add_entry():
@@ -79,7 +105,7 @@ def add_entry():
             g.db.rollback()
             return render_template('addentry.html')
         flash('提交成功')
-        return redirect(url_for('views.show_entries'))
+        return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
     return render_template('addentry.html')
 
 @views.route('/editentry', methods=['POST'])
@@ -95,7 +121,7 @@ def update_entry():
     except Exception as e:
         mylogger.error(str(e))
         g.db.rollback()
-    return redirect(url_for('views.show_entries'))
+    return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
 
 @views.route('/editentry/<int:id>', methods=['GET'])
 def edit_entry(id):
@@ -127,7 +153,7 @@ def del_entry(id):
     except Exception as e:
         mylogger.error(str(e))
         g.db.rollback()
-    return redirect(url_for('views.show_entries'))
+    return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
 
 @views.route('/register', methods=['GET', 'POST'])
 def register():
@@ -160,7 +186,8 @@ def login():
                 session['aeskey'] = results[0][3]
                 flash('You were logged in')
                 mylogger.info(str(session['user_id'])+": 登入成功")
-                return redirect(url_for('views.show_entries'))
+                session['currentpage'] = 1
+                return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
             else:
                 flash('Invalid username/password')
         except Exception as e:
@@ -174,6 +201,8 @@ def logout():
     session.pop('logged_in', None)
     session.pop('user_id', None)
     session.pop('aeskey', None)
+    session.pop('currentpage', None)
+    session.pop('maxpage', None)
     flash('you are logged out')
     return redirect(url_for('views.login'))
 

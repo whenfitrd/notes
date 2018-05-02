@@ -48,21 +48,72 @@
     		</div>
         </form>
 	</div>
-    {% for entry in entries %}
+    {% if entries %}
+        {% for i in range(5) %}
+            {% if entries[(currentpage-1)*5+i] %}
+            <div class="row clearfix">
+              <div class="col-md-12 column">
+                  <h2>{{ entries[(currentpage-1)*5+i].title }}</h2>
+                  <p>{{ entries[(currentpage-1)*5+i].text|safe }}</p>
+                  <p class="pull-right">
+                      <a class="btn" href="{{ url_for('views.edit_entry', id=entries[(currentpage-1)*5+i].id) }}">编辑</a>
+                      <a class="btn" href="{{ url_for('views.del_entry', id=entries[(currentpage-1)*5+i].id) }}">删除</a>
+                      创建时间：{{ entries[(currentpage-1)*5+i].createtime|safe }}
+                  </p>
+              </div>
+            </div>
+            {% endif %}
+        {% endfor %}
         <div class="row clearfix">
-          <div class="col-md-12 column">
-              <h2>{{ entry.title }}</h2>
-              <p>{{ entry.text|safe }}</p>
-              <p class="pull-right">
-                  <a class="btn" href="{{ url_for('views.edit_entry', id=entry.id) }}">编辑</a>
-                  <a class="btn" href="{{ url_for('views.del_entry', id=entry.id) }}">删除</a>
-                  创建时间：{{ entry.createtime|safe }}
-              </p>
-          </div>
-        </div>
+    		<div class="col-md-12 column">
+    			<ul class="pagination pull-right">
+                    {% if currentpage == 1 %}
+        				<li>
+        					 <a>Prev</a>
+        				</li>
+                    {% else %}
+                        <li>
+                             <a href="{{ url_for('views.pre_page') }}">Prev</a>
+                        </li>
+                    {% endif %}
+                    {% if currentpage - 2 >= 1 %}
+                        <li>
+                             <a href="{{ url_for('views.show_entries', currentpage=currentpage-2) }}">{{ currentpage-2 }}</a>
+                        </li>
+                    {% endif %}
+                    {% if currentpage - 1 >= 1 %}
+                        <li>
+                             <a href="{{ url_for('views.show_entries', currentpage=currentpage-1) }}">{{ currentpage-1 }}</a>
+                        </li>
+                    {% endif %}
+                    <li class='active'>
+                         <a>{{ currentpage }}</a>
+                    </li>
+                    {% if currentpage + 1 <= maxpage %}
+                        <li>
+                             <a href="{{ url_for('views.show_entries', currentpage=currentpage+1) }}">{{ currentpage+1 }}</a>
+                        </li>
+                    {% endif %}
+                    {% if currentpage + 2 <= maxpage %}
+                        <li>
+                             <a href="{{ url_for('views.show_entries', currentpage=currentpage+2) }}">{{ currentpage+2 }}</a>
+                        </li>
+                    {% endif %}
+                    {% if currentpage >= maxpage %}
+        				<li>
+        					 <a>Next</a>
+        				</li>
+                    {% else %}
+                        <li>
+                             <a href="{{ url_for('views.next_page') }}">Next</a>
+                        </li>
+                    {% endif %}
+    			</ul>
+    		</div>
+    	</div>
     {% else %}
       <li><em>Unbelievable.  No entries here so far</em>
-    {% endfor %}
+    {% endif %}
 </div>
 {% block page_content %}
 {% endblock %}

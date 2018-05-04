@@ -209,6 +209,7 @@ def login():
             if len(results) == 1:
                 session['logged_in'] = True
                 session['user_id'] = results[0][0]
+                session['username'] = results[0][1]
                 session['aeskey'] = results[0][3]
                 flash('You were logged in')
                 mylogger.info(str(session['user_id'])+": 登入成功")
@@ -221,7 +222,7 @@ def login():
                     if len(roleinfo) >= 1:
                         session['roleinfo'] = roleinfo[0]
                     else:
-                        session['roleinfo'] = [dict(nickname='未知')]
+                        session['roleinfo'] = [dict(nickname='default')]
                 except Exception as e:
                     mylogger.error(str(e))
                     abort(401)
@@ -294,7 +295,7 @@ def show_roleinfo():
         if len(roleinfo) >= 1:
             session['roleinfo'] = roleinfo[0]
         else:
-            session['roleinfo'] = [dict(nickname='未知')]
+            session['roleinfo'] = [dict(nickname='default')]
     except Exception as e:
         mylogger.error(str(e))
         abort(401)

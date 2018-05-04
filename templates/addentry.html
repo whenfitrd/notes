@@ -37,7 +37,7 @@
                     {% if session['roleinfo']['nickname'] %}
                         <a href="{{ url_for('views.show_roleinfo') }}">欢迎你，{{ session['roleinfo']['nickname'] }}</a>
                     {% else %}
-                        <a href="{{ url_for('views.show_roleinfo') }}">欢迎你，{{ session['user_id'] }}</a>
+                        <a href="{{ url_for('views.show_roleinfo') }}">欢迎你，{{ session['username'] }}</a>
                     {% endif %}
                 </li>
     		</ul>

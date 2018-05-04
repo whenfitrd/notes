@@ -50,7 +50,7 @@ def show_entries(currentpage=1):
     if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
         return render_template('login.html')
 
-    if session.get('search') and session.get('entries') and session['search']:
+    if session.get('search') and session['search'] and session.get('entries') and not session.get('entryupdate'):
         entries = session['entries']
         session['maxpage'] = (len(entries)-1)//5+1
         return render_template('showentries.html', entries=entries, currentpage=currentpage, maxpage=session['maxpage'])
@@ -65,6 +65,7 @@ def show_entries(currentpage=1):
         mylogger.error(str(e))
         abort(401)
     session['maxpage'] = (len(entries)-1)//5+1
+    session['entryupdate'] = False
     return render_template('showentries.html', entries=entries, currentpage=currentpage, maxpage=session['maxpage'])
 
 @views.route('/prepage', methods=['GET'])
@@ -146,6 +147,7 @@ def update_entry():
     try:
         g.cur.execute(sql, [encrypt(request.form['title'], session['aeskey']), encrypt(request.form['text'], session['aeskey']), request.form['id']])
         g.db.commit()
+        session['entryupdate'] = True
     except Exception as e:
         mylogger.error(str(e))
         g.db.rollback()

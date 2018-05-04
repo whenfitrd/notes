@@ -218,7 +218,10 @@ def login():
                 try:
                     statu = g.cur.execute(sql, [session['user_id']])
                     roleinfo = [dict(nickname=row[0], sex=row[1], old=row[2], city=row[3], signature=row[4]) for row in g.cur.fetchall()]
-                    session['roleinfo'] = roleinfo[0]
+                    if len(roleinfo) >= 1:
+                        session['roleinfo'] = roleinfo[0]
+                    else:
+                        session['roleinfo'] = [dict(nickname='未知')]
                 except Exception as e:
                     mylogger.error(str(e))
                     abort(401)
@@ -283,12 +286,15 @@ def role_info():
 def show_roleinfo():
     if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
         return render_template('login.html')
-        
+
     sql = "select nickname, sex, old, city, signature from roleinfo where user_id=%s"
     try:
         statu = g.cur.execute(sql, [session['user_id']])
         roleinfo = [dict(nickname=row[0], sex=row[1], old=row[2], city=row[3], signature=row[4]) for row in g.cur.fetchall()]
-        session['roleinfo'] = roleinfo[0]
+        if len(roleinfo) >= 1:
+            session['roleinfo'] = roleinfo[0]
+        else:
+            session['roleinfo'] = [dict(nickname='未知')]
     except Exception as e:
         mylogger.error(str(e))
         abort(401)

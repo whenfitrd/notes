@@ -47,12 +47,8 @@ def index():
 @views.route('/showentries', methods=['GET'])
 @views.route('/showentries/<int:currentpage>', methods=['GET'])
 def show_entries(currentpage=1):
-    if not session.get('logged_in'):
-        abort(401)
-    if not session.get('user_id'):
-        abort(401)
-    if not session.get('aeskey'):
-        abort(401)
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
 
     if session.get('search') and session.get('entries') and session['search']:
         entries = session['entries']
@@ -73,36 +69,26 @@ def show_entries(currentpage=1):
 
 @views.route('/prepage', methods=['GET'])
 def pre_page():
-    if not session.get('logged_in'):
-        abort(401)
-    if not session.get('user_id'):
-        abort(401)
-    if not session.get('aeskey'):
-        abort(401)
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
+
     if session['currentpage'] > 1:
         session['currentpage'] -= 1
     return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
 
 @views.route('/nextpage', methods=['GET'])
 def next_page():
-    if not session.get('logged_in'):
-        abort(401)
-    if not session.get('user_id'):
-        abort(401)
-    if not session.get('aeskey'):
-        abort(401)
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
+
     if session['currentpage'] < session['maxpage']:
         session['currentpage'] += 1
     return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
 
 @views.route('/search', methods=['POST'])
 def search():
-    if not session.get('logged_in'):
-        abort(401)
-    if not session.get('user_id'):
-        abort(401)
-    if not session.get('aeskey'):
-        abort(401)
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
 
     if request.form['search'] is None:
         redirect(url_for('views.show_entries', currentpage=session['currentpage']))
@@ -136,10 +122,9 @@ def search():
 @views.route('/addentry', methods=['POST', 'GET'])
 def add_entry():
     if request.method == 'POST':
-        if not session.get('logged_in'):
-            abort(401)
-        if not session.get('aeskey'):
-            abort(401)
+        if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+            return render_template('login.html')
+
         try:
             g.cur.execute('insert into entries (user_id, title, content) values (%s, %s, %s)',\
             [str(session['user_id']), encrypt(request.form['title'], session['aeskey']), encrypt(request.form['text'], session['aeskey'])])
@@ -154,10 +139,9 @@ def add_entry():
 
 @views.route('/editentry', methods=['POST'])
 def update_entry():
-    if not session.get('logged_in'):
-        abort(401)
-    if not session.get('aeskey'):
-        abort(401)
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
+
     sql = "update entries set title=%s, content=%s where id=%s"
     try:
         g.cur.execute(sql, [encrypt(request.form['title'], session['aeskey']), encrypt(request.form['text'], session['aeskey']), request.form['id']])
@@ -169,10 +153,9 @@ def update_entry():
 
 @views.route('/editentry/<int:id>', methods=['GET'])
 def edit_entry(id):
-    if not session.get('logged_in'):
-        abort(401)
-    if not session.get('aeskey'):
-        abort(401)
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
+
     sql = "select id, title, content, createtime from entries where id=%s"
     try:
         statu = g.cur.execute(sql, [id])
@@ -186,10 +169,9 @@ def edit_entry(id):
 
 @views.route('/del/<int:id>', methods=['GET'])
 def del_entry(id):
-    if not session.get('logged_in'):
-        abort(401)
-    if not session.get('aeskey'):
-        abort(401)
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
+
     try:
         g.cur.execute('delete from entries where id=%s', [id])
         g.db.commit()
@@ -231,6 +213,16 @@ def login():
                 flash('You were logged in')
                 mylogger.info(str(session['user_id'])+": 登入成功")
                 session['currentpage'] = 1
+
+                sql = "select nickname, sex, old, city, signature from roleinfo where user_id=%s"
+                try:
+                    statu = g.cur.execute(sql, [session['user_id']])
+                    roleinfo = [dict(nickname=row[0], sex=row[1], old=row[2], city=row[3], signature=row[4]) for row in g.cur.fetchall()]
+                    session['roleinfo'] = roleinfo[0]
+                except Exception as e:
+                    mylogger.error(str(e))
+                    abort(401)
+
                 return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
             else:
                 flash('Invalid username/password')
@@ -251,6 +243,57 @@ def logout():
     session.pop('searchkey', None)
     flash('you are logged out')
     return redirect(url_for('views.login'))
+
+@views.route('/roleinfo', methods=['POST'])
+def role_info():
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
+
+    sql = "select nickname, sex, old, city, signature from roleinfo where user_id=%s"
+    sqlinsert = "insert into roleinfo (user_id, nickname, sex, old, city, signature) values (%s, %s, %s, %s, %s, %s)"
+    sqlupdate = "update roleinfo set nickname=%s, sex=%s, old=%s, city=%s, signature=%s where user_id=%s"
+    try:
+        g.cur.execute(sql, [session['user_id']])
+        roleinfo = [dict(nickname=row[0], sex=row[1], old=row[2], city=row[3], signature=row[4]) for row in g.cur.fetchall()]
+        if len(roleinfo) >= 1:
+            try:
+                g.cur.execute(sqlupdate, [request.form.get('nickname') or roleinfo[0].nickname, \
+                request.form.get('sex') or roleinfo[0]['sex'], request.form.get('old') or roleinfo[0]['old'] or 0, \
+                request.form.get('city') or roleinfo[0]['city'], request.form.get('signature') or roleinfo[0]['signature'], session['user_id']])
+                g.db.commit()
+            except Exception as e:
+                mylogger.error(str(e))
+                g.db.rollback()
+                abort(401)
+        else:
+            try:
+                g.cur.execute(sqlinsert, [session['user_id'], request.form.get('nickname'), \
+                request.form.get('sex'), request.form.get('old') or 0, request.form.get('city'), request.form.get('signature')])
+                g.db.commit()
+            except Exception as e:
+                mylogger.error(str(e))
+                g.db.rollback()
+                abort(401)
+    except Exception as e:
+        mylogger.error(str(e))
+        abort(401)
+    return redirect(url_for('views.show_roleinfo'))
+
+@views.route('/showroleinfo', methods=['GET'])
+def show_roleinfo():
+    if not session.get('logged_in') or not session.get('user_id') or not session.get('aeskey'):
+        return render_template('login.html')
+        
+    sql = "select nickname, sex, old, city, signature from roleinfo where user_id=%s"
+    try:
+        statu = g.cur.execute(sql, [session['user_id']])
+        roleinfo = [dict(nickname=row[0], sex=row[1], old=row[2], city=row[3], signature=row[4]) for row in g.cur.fetchall()]
+        session['roleinfo'] = roleinfo[0]
+    except Exception as e:
+        mylogger.error(str(e))
+        abort(401)
+    return render_template('editroleinfo.html', roleinfo=roleinfo)
+
 
 @views.route('/newlogin')
 def newlogin():

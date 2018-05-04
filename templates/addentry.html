@@ -33,6 +33,13 @@
                       <a href="{{ url_for('views.logout') }}">登出</a>
                     {% endif %}
                 </li>
+                <li class="pull-right">
+                    {% if session['roleinfo']['nickname'] %}
+                        <a href="{{ url_for('views.show_roleinfo') }}">欢迎你，{{ session['roleinfo']['nickname'] }}</a>
+                    {% else %}
+                        <a href="{{ url_for('views.show_roleinfo') }}">欢迎你，{{ session['user_id'] }}</a>
+                    {% endif %}
+                </li>
     		</ul>
     	</div>
     </div>

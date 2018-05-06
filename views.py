@@ -2,7 +2,7 @@
 #coding=utf-8
 
 from flask import render_template, request, g, session, redirect,\
-    abort, flash, url_for
+    abort, flash, url_for, make_response
 import pymysql
 
 from crypto import get_md5, encrypt, decrypt, get_aeskey
@@ -12,8 +12,6 @@ from flask import Blueprint
 from flask_login import login_required, login_user, logout_user
 from __init__ import login_manager
 from models import User
-
-from datetime import timedelta
 
 #from markdown import markdown
 #import bleach
@@ -61,6 +59,8 @@ def show_entries(currentpage=1):
 
     sql = "select id, title, content, createtime from entries where user_id=%s order by id desc"
     try:
+        # user_id = get_cookie('user_id')
+        # aeskey = get_cookie('aeskey')
         statu = g.cur.execute(sql, str(session['user_id']))
         entries = [dict(id=row[0], title=decrypt(row[1], session['aeskey']).decode('utf-8'),\
         text=decrypt(row[2], session['aeskey']).decode('utf-8'), createtime=row[3])\
@@ -194,6 +194,14 @@ def register():
 def user_loader(user_id):
     return User(user_id)
 
+def set_cookie(name, value):
+    resp = make_response('set cookie')
+    resp.set_cookie(name, value)
+
+def get_cookie(name):
+    cookie = request.cookies.get(name)
+    return cookie
+
 @views.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -207,14 +215,21 @@ def login():
                 session['user_id'] = results[0][0]
                 session['username'] = results[0][1]
                 session['aeskey'] = results[0][3]
+                # set_cookie('user_id', results[0][0])
+                # set_cookie('aeskey', results[0][3])
                 flash('You were logged in')
                 mylogger.info(str(session['user_id'])+": 登入成功")
                 session['currentpage'] = 1
 
                 user = User(session['user_id'])
-                login_user(user)
+                if request.form.get('remember_me'):
+                    # login_user(user, remember=True)
+                    session.permanent = True
+                else:
+                    # login_user(user)
+                    session.permanent = False
 
-                session.permanent = True
+                login_user(user)
 
                 sql = "select nickname, sex, old, city, signature from roleinfo where user_id=%s"
                 try:

@@ -96,6 +96,15 @@
                                 <input type="radio" name="sex" id="optionsRadios2" value=2> 女
                             {% endif %}
                         </label>
+                        <!-- {% if roleinfo %}
+                            {% if roleinfo[0].sex == 1 %}
+                                {{ form.sex(value=1) }}
+                            {% else %}
+                                {{ form.sex(value=2) }}
+                            {% endif %}
+                        {% else %}
+                            {{ form.sex() }}
+                        {% endif %} -->
                     </div>
                 </div>
                 <div class="form-group">

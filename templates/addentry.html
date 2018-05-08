@@ -61,7 +61,6 @@
         {% else %}
             <form action="{{ url_for('views.add_entry') }}" method="POST" role="form">
         {% endif %}
-        <form action="{{ url_for('views.add_entry') }}" method="POST" role="form">
             <div class="form-group col-md-12 column">
                 <div class="row clearfix">
                     <div class="col-md-1 column">
@@ -73,9 +72,9 @@
                             </div>
             				<div class="col-md-10 column">
                                 {% if entry %}
-                                    <input type="name" name="title" id="name" class="form-control" id="inputgsmc" value={{ entry.title }}>
+                                    {{ form.title(class='form-control', value=entry.title ) }}
                                 {% else %}
-                                    <input type="name" name="title" id="name" class="form-control" id="inputgsmc" placeholder="标题">
+                                    {{ form.title(class='form-control', placeholder="账号") }}
                                 {% endif %}
             				</div>
                         </div>
@@ -93,9 +92,10 @@
                             </div>
             				<div class="col-md-10 column">
                                 {% if entry %}
-                                    <textarea class="form-control" rows="5" name="text" id="content" required="required">{{ entry.text }}</textarea>
+                                    <input type="hidden" value={{ form.content.process_data(entry.text) }}>
+                                    {{ form.content(class='form-control', rows="5", required="required") }}
                                 {% else %}
-                                    <textarea class="form-control" rows="5" name="text" id="content" required="required"></textarea>
+                                    {{ form.content(class='form-control', rows="5", required="required") }}
                                 {% endif %}
             				</div>
                         </div>
@@ -107,7 +107,7 @@
             {% endif %}
             <div class="form-group">
                 <div class="col-sm-6">
-                    <button type="submit" name="submit" class="btn btn-danger pull-right tb">提交</button>
+                    {{ form.submit(class='btn btn-danger pull-right tb') }}
                 </div>
                 <div class="col-sm-6">
                     <button name="reset" type="reset" class="btn btn-default pull-left">重置</button>

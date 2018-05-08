@@ -22,12 +22,12 @@
   <form action="{{ url_for('views.register') }}" class="form-signin" method="POST">
     <h2 class="form-signin-heading">注册</h2>
     <label for="inputAccount" class="sr-only">Account</label>
-    <input name="username" type="account" id="inputAccount" class="form-control" placeholder="账号" pattern="[0-9a-zA-Z]+" oninvalid="setCustomValidity('请使用正确的账号格式');" autofocus>
+    {{ form.account(class='form-control', placeholder="账号") }}
     <label for="inputPassword" class="sr-only">Password</label>
-    <input name="password" type="password" id="inputPassword" class="form-control" placeholder="密码" pattern="[0-9a-zA-Z]+" oninvalid="setCustomValidity('请使用正确的密码格式');">
+    {{ form.passwd(class='form-control', placeholder="密码") }}
     <label for="repeatPassword" class="sr-only">Repetition</label>
-    <input name="repetition" type="password" id="repeatPassword" class="form-control" placeholder="重复密码" pattern="[0-9a-zA-Z]+" oninvalid="setCustomValidity('请使用正确的密码格式');">
-    <button class="btn btn-lg btn-primary btn-block" type="submit">注册</button>
+    {{ form.repeatPasswd(class='form-control', placeholder="重复密码") }}
+    {{ form.submit(class='btn btn-lg btn-primary btn-block') }}
     <a class="pull-right" href="{{ url_for('views.login') }}">登入</a>
     {% for message in get_flashed_messages() %}
       <div class=flash>{{ message }}</div>

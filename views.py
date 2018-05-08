@@ -16,7 +16,7 @@ from models import User
 #from markdown import markdown
 #import bleach
 
-from forms import ContentForm
+from forms import ContentForm, LoginForm, RegisterForm, AddentryForm, EditroleinfoForm
 
 views = Blueprint('views', __name__)
 
@@ -46,7 +46,7 @@ def teardown_request(exception):
 
 @views.route('/')
 def index():
-    return render_template('login.html')
+    return redirect(url_for('views.login'))
 
 @views.route('/showentries', methods=['GET'])
 @views.route('/showentries/<int:currentpage>', methods=['GET'])
@@ -121,25 +121,27 @@ def search():
 @views.route('/addentry', methods=['POST', 'GET'])
 @login_required
 def add_entry():
+    addentryForm = AddentryForm()
     if request.method == 'POST':
         try:
             g.cur.execute('insert into entries (user_id, title, content) values (%s, %s, %s)',\
-            [str(session['user_id']), encrypt(request.form['title'], session['aeskey']), encrypt(request.form['text'], session['aeskey'])])
+            [str(session['user_id']), encrypt(addentryForm.title.data, session['aeskey']), encrypt(addentryForm.content.data, session['aeskey'])])
             g.db.commit()
         except Exception as e:
             mylogger.error(str(e))
             g.db.rollback()
-            return render_template('addentry.html')
+            return redirect(url_for('views.add_entry'))
         flash('提交成功')
         return redirect(url_for('views.show_entries', currentpage=session['currentpage']))
-    return render_template('addentry.html')
+    return render_template('addentry.html', form=addentryForm)
 
 @views.route('/editentry', methods=['POST'])
 @login_required
 def update_entry():
+    addentryForm = AddentryForm()
     sql = "update entries set title=%s, content=%s where id=%s"
     try:
-        g.cur.execute(sql, [encrypt(request.form['title'], session['aeskey']), encrypt(request.form['text'], session['aeskey']), request.form['id']])
+        g.cur.execute(sql, [encrypt(addentryForm.title.data, session['aeskey']), encrypt(addentryForm.content.data, session['aeskey']), request.form['id']])
         g.db.commit()
         session['entryupdate'] = True
     except Exception as e:
@@ -150,6 +152,7 @@ def update_entry():
 @views.route('/editentry/<int:id>', methods=['GET'])
 @login_required
 def edit_entry(id):
+    addentryForm = AddentryForm()
     sql = "select id, title, content, createtime from entries where id=%s"
     try:
         statu = g.cur.execute(sql, [id])
@@ -159,7 +162,7 @@ def edit_entry(id):
     except Exception as e:
         mylogger.error(str(e))
         abort(401)
-    return render_template('addentry.html', entry=entries[0])
+    return render_template('addentry.html', entry=entries[0], form=addentryForm)
 
 @views.route('/del/<int:id>', methods=['GET'])
 @login_required
@@ -175,20 +178,21 @@ def del_entry(id):
 
 @views.route('/register', methods=['GET', 'POST'])
 def register():
+    registerForm = RegisterForm()
     if request.method == 'POST':
         sql = "INSERT INTO users(username, password, aeskey) VALUES (%s, %s, %s)"
-        if request.form.get('password') != request.form.get('repetition'):
+        if registerForm.passwd.data != registerForm.repeatPasswd.data:
             flash('输入的两次密码不相同')
-            return render_template('register.html')
+            return redirect(url_for('views.register'))
         try:
-            g.cur.execute(sql, [request.form.get('username'), get_md5(request.form.get('password')), get_aeskey()])
+            g.cur.execute(sql, [registerForm.account.data, get_md5(registerForm.passwd.data), get_aeskey()])
             g.db.commit()
-            return render_template('login.html')
+            return redirect(url_for('views.login'))
         except Exception as e:
             mylogger.error(str(e))
             g.db.rollback()
             flash('注册失败')
-    return render_template('register.html')
+    return render_template('register.html', form=registerForm)
 
 @login_manager.user_loader
 def user_loader(user_id):
@@ -204,11 +208,11 @@ def get_cookie(name):
 
 @views.route('/login', methods=['GET', 'POST'])
 def login():
-    error = None
+    loginForm = LoginForm()
     if request.method == 'POST':
         sql = "select * from users where username=%s and password=%s"
         try:
-            g.cur.execute(sql, [request.form.get('username'), get_md5(request.form.get('password'))])
+            g.cur.execute(sql, [loginForm.account.data, get_md5(loginForm.passwd.data)])
             results = g.cur.fetchall()
             if len(results) == 1:
                 session['logged_in'] = True
@@ -222,7 +226,7 @@ def login():
                 session['currentpage'] = 1
 
                 user = User(session['user_id'])
-                if request.form.get('remember_me'):
+                if loginForm.checkbox.data:
                     # login_user(user, remember=True)
                     session.permanent = True
                 else:
@@ -249,7 +253,7 @@ def login():
         except Exception as e:
             mylogger.error(str(e))
             g.db.rollback()
-    return render_template('login.html')
+    return render_template('login.html', form=loginForm)
 
 @views.route('/logout')
 @login_required
@@ -269,6 +273,7 @@ def logout():
 @views.route('/roleinfo', methods=['POST'])
 @login_required
 def role_info():
+    editroleinfoForm = EditroleinfoForm()
     sql = "select nickname, sex, old, city, signature from roleinfo where user_id=%s"
     sqlinsert = "insert into roleinfo (user_id, nickname, sex, old, city, signature) values (%s, %s, %s, %s, %s, %s)"
     sqlupdate = "update roleinfo set nickname=%s, sex=%s, old=%s, city=%s, signature=%s where user_id=%s"
@@ -302,6 +307,7 @@ def role_info():
 @views.route('/showroleinfo', methods=['GET'])
 @login_required
 def show_roleinfo():
+    editroleinfoForm = EditroleinfoForm()
     sql = "select nickname, sex, old, city, signature from roleinfo where user_id=%s"
     try:
         statu = g.cur.execute(sql, [session['user_id']])
@@ -313,7 +319,7 @@ def show_roleinfo():
     except Exception as e:
         mylogger.error(str(e))
         abort(401)
-    return render_template('editroleinfo.html', roleinfo=roleinfo)
+    return render_template('editroleinfo.html', roleinfo=roleinfo, form=editroleinfoForm)
 
 
 @views.route('/newlogin')

@@ -13,10 +13,11 @@ from flask_login import login_required, login_user, logout_user
 from __init__ import login_manager
 from models import User
 
-#from markdown import markdown
-#import bleach
+from markdown import markdown
+import bleach
 
-from forms import ContentForm, LoginForm, RegisterForm, AddentryForm, EditroleinfoForm
+from forms import ContentForm, LoginForm, RegisterForm, AddentryForm,\
+     EditroleinfoForm, AddArticleForm
 
 views = Blueprint('views', __name__)
 
@@ -321,6 +322,32 @@ def show_roleinfo():
         abort(401)
     return render_template('editroleinfo.html', roleinfo=roleinfo, form=editroleinfoForm)
 
+@views.route('/addarticle', methods=['POST', 'GET'])
+@login_required
+def add_article():
+    form = AddArticleForm()
+    if request.method == 'POST':
+        sql = "insert into articles (user_id, title, article) values (%s, %s, %s)"
+        try:
+            title = form.title.data
+            text = form.content.data
+            g.cur.execute(sql, [session['user_id'], title, text])
+            g.db.commit()
+        except Exception as e:
+            mylogger.error(str(e))
+            g.db.rollback()
+            abort(401)
+        #print(text)
+        # do something interesting with the Markdown text
+        # allowed_tags=['a','ul','strong','p','h1','h2','h3']
+        # html_body=markdown(text,output_format='html')
+        # html_body=bleach.clean(html_body,tags=allowed_tags,strip=True)
+        # html_body=bleach.linkify(html_body)
+        #
+        # pagedown = html_body
+        # print(pagedown)
+
+    return render_template('addarticle.html', form=form)
 
 @views.route('/newlogin')
 def newlogin():

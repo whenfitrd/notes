@@ -35,3 +35,8 @@ class EditroleinfoForm(FlaskForm):
     city = StringField(id='inputcity')
     signature = TextAreaField(id='inputsignature')
     submit = SubmitField('提交')
+
+class AddArticleForm(FlaskForm):
+    title = StringField()
+    content = PageDownField('Enter your markdown')
+    submit = SubmitField('submit')

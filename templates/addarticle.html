@@ -1,0 +1,105 @@
+{% extends 'bootstrap/base.html' %}
+{% block html_attribs %} lang="zh-CN" {% endblock %}
+{% block title %}Nodes{% endblock %}
+{% block metas %}
+{{ super() }}
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+{% endblock %}
+{% block styles %}
+{{ super() }}
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='ie10-viewport-bug-workaround.css') }}">
+{{ pagedown.include_pagedown() }}
+{% endblock %}
+{% block body %}
+{% block navbar %}
+
+{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row clearfix">
+    	<div class="col-md-12 column">
+    		<ul class="nav nav-tabs">
+    			<li class="active">
+    				 <a href="#">详细信息</a>
+    			</li>
+    			<!-- <li class="disabled">
+    				 <a href="#">信息</a>
+    			</li> -->
+                <li class="pull-right">
+                    {% if not session.logged_in %}
+                      <a href="{{ url_for('views.login') }}">登入</a>
+                    {% else %}
+                      <a href="{{ url_for('views.logout') }}">登出</a>
+                    {% endif %}
+                </li>
+    		</ul>
+    	</div>
+    </div>
+    <div class="row clearfix">
+		<div class="col-md-12 column">
+            <h2></h2>
+		</div>
+	</div>
+	<div class="row clearfix">
+        <form action="{{ url_for('views.add_article') }}" method="POST" role="form">
+            {{ form.hidden_tag() }}
+            <div class="form-group col-md-12 column">
+                <div class="row clearfix">
+                    <div class="col-md-1 column">
+                    </div>
+                    <label for="inputgsmc" class="col-sm-2 control-label">标题</label>
+                    <div class="row clearfix">
+                        <div class="col-md-12 column">
+                            <div class="col-md-1 column">
+                            </div>
+            				<div class="col-md-10 column">
+                                {{ form.title(class='form-control', placeholder="标题") }}
+            				</div>
+                        </div>
+                    </div>
+    			</div>
+            </div>
+            <div class="form-group col-md-12 column">
+                <div class="row clearfix">
+                    <div class="col-md-1 column">
+                    </div>
+                    <label name="label" for="inputgsmc" class="col-sm-2 control-label">内容</label>
+                    <div class="row clearfix">
+                        <div class="col-md-12 column">
+                            <div class="col-md-1 column">
+                            </div>
+            				<div class="col-md-10 column">
+                                <div class="form-group">
+                                     <div class="row">
+                                         <div class="col-md-12">
+                                             {{ form.content(only_input=True, class="input-markdown form-control", rows=10, placeholder=form.content.label.text) }}
+                                         </div>
+                                         <div class="col-md-12">
+                                             {{ form.content(only_preview=True, class="input-markdown form-control") }}
+                                         </div>
+                                     </div>
+                                </div>
+            				</div>
+                        </div>
+                    </div>
+    			</div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-6">
+                    {{ form.submit(class='btn btn-danger pull-right tb') }}
+                </div>
+                <div class="col-sm-6">
+                    <button name="reset" type="reset" class="btn btn-default pull-left">重置</button>
+                </div>
+            </div>
+        </form>
+	</div>
+</div>
+{% block page_content %}
+{% endblock %}
+{% endblock %}
+{% block footer %}
+{% endblock %}
+{% endblock %}

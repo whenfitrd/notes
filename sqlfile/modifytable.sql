@@ -9,3 +9,10 @@ create table roleinfo(
     city varchar(20),
     signature varchar(200)
 )default charset=utf8;
+create table articles(
+    id int(6) not null primary key auto_increment,
+    user_id int(6) not null,
+    title varchar(20) not null,
+    article varchar(200)
+)default charset=utf8;
+alter table articles modify article varchar(2000);

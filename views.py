@@ -225,6 +225,7 @@ def login():
                 flash('You were logged in')
                 mylogger.info(str(session['user_id'])+": 登入成功")
                 session['currentpage'] = 1
+                session['currentarticlepage'] = 1
 
                 user = User(session['user_id'])
                 if loginForm.checkbox.data:
@@ -339,7 +340,8 @@ def add_article():
             abort(401)
         #print(text)
         # do something interesting with the Markdown text
-        # allowed_tags=['a','ul','strong','p','h1','h2','h3']
+        # allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code', \
+        #'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul','h1', 'h2', 'h3', 'p','img']
         # html_body=markdown(text,output_format='html')
         # html_body=bleach.clean(html_body,tags=allowed_tags,strip=True)
         # html_body=bleach.linkify(html_body)
@@ -348,6 +350,56 @@ def add_article():
         # print(pagedown)
 
     return render_template('addarticle.html', form=form)
+
+def get_html(markdown_text):
+    allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code', \
+    'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul','h1', 'h2', 'h3', 'p','img']
+    html_body=markdown(markdown_text,output_format='html')
+    html_body=bleach.clean(html_body,tags=allowed_tags,strip=True)
+    html_body=bleach.linkify(html_body)
+
+    return html_body
+
+@views.route('/showaticle/<int:id>')
+@login_required
+def show_article(id):
+    sql = "select id, title, article from articles where id=%s"
+    try:
+        statu = g.cur.execute(sql, [id])
+        article = [dict(id=row[0], title=row[1], content=get_html(row[2])) for row in g.cur.fetchall()]
+    except Exception as e:
+        mylogger.error(str(e))
+        abort(401)
+    return render_template('showaticle.html', article=article[0])
+
+@views.route('/showarticlelist', methods=['GET'])
+@views.route('/showarticlelist/<int:currentpage>', methods=['GET'])
+@login_required
+def show_articlelist(currentpage=1):
+    sql = "select id, title from articles where user_id=%s order by id desc"
+    try:
+        statu = g.cur.execute(sql, str(session['user_id']))
+        articles = [dict(id=row[0], title=row[1]) for row in g.cur.fetchall()]
+    except Exception as e:
+        mylogger.error(str(e))
+        abort(401)
+    session['articlemaxpage'] = (len(articles)-1)//5+1
+    session['articleupdate'] = False
+    return render_template('articlelist.html', articles=articles, currentpage=currentpage, maxpage=session['articlemaxpage'])
+
+@views.route('/prepage', methods=['GET'])
+@login_required
+def articles_pre_page():
+    if session['currentarticlepage'] > 1:
+        session['currentarticlepage'] -= 1
+    return redirect(url_for('views.show_articlelist', currentpage=session['currentarticlepage']))
+
+@views.route('/nextpage', methods=['GET'])
+@login_required
+def articles_next_page():
+    if session['currentarticlepage'] < session['articlemaxpage']:
+        session['currentarticlepage'] += 1
+    return redirect(url_for('views.show_articlelist', currentpage=session['currentarticlepage']))
 
 @views.route('/newlogin')
 def newlogin():

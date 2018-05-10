@@ -26,20 +26,35 @@
     			<!-- <li class="disabled">
     				 <a href="#">信息</a>
     			</li> -->
-                <li class="pull-right">
-                    {% if not session.logged_in %}
-                      <a href="{{ url_for('views.login') }}">登入</a>
-                    {% else %}
-                      <a href="{{ url_for('views.logout') }}">登出</a>
-                    {% endif %}
-                </li>
-                <li class="pull-right">
-                    {% if session['roleinfo']['nickname'] %}
-                        <a href="{{ url_for('views.show_roleinfo') }}">欢迎你，{{ session['roleinfo']['nickname'] }}</a>
-                    {% else %}
-                        <a href="{{ url_for('views.show_roleinfo') }}">欢迎你，{{ session['username'] }}</a>
-                    {% endif %}
-                </li>
+                {% if not session.logged_in %}
+                    <li class="pull-right">
+                        <a href="{{ url_for('views.login') }}">登入</a>
+                    </li>
+                {% else %}
+                    <li class="dropdown pull-right">
+                        {% if session['roleinfo']['nickname'] %}
+                    	   <a href="#" data-toggle="dropdown" class="dropdown-toggle">{{ session['roleinfo']['nickname'] }}<strong class="caret"></strong></a>
+                        {% else %}
+                            <a href="#" data-toggle="dropdown" class="dropdown-toggle">{{ session['username'] }}<strong class="caret"></strong></a>
+                        {% endif %}
+                        <ul class="dropdown-menu">
+                            <li>
+                    			 <a href="{{ url_for('views.show_roleinfo') }}">我的信息</a>
+                    		</li>
+                            <li>
+                    			 <a href="{{ url_for('views.show_articlelist') }}">文章列表</a>
+                    		</li>
+                    		<li>
+                    			 <a href="{{ url_for('views.add_article') }}">添加文章</a>
+                    		</li>
+                    		<li class="divider">
+                    		</li>
+                    		<li>
+                    			 <a href="{{ url_for('views.logout') }}">登出</a>
+                    		</li>
+                    	</ul>
+                    </li>
+                {% endif %}
     		</ul>
     	</div>
     </div>
@@ -120,5 +135,7 @@
 {% endblock %}
 {% endblock %}
 {% block footer %}
+<script src="http://libs.baidu.com/jquery/1.9.0/jquery.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 {% endblock %}
 {% endblock %}

@@ -27,7 +27,6 @@
     			<!-- <li class="disabled">
     				 <a href="#">信息</a>
     			</li> -->
-
                 {% if not session.logged_in %}
                     <li class="pull-right">
                         <a href="{{ url_for('views.login') }}">登入</a>
@@ -66,58 +65,44 @@
 		</div>
 	</div>
 	<div class="row clearfix">
-        <form action="{{ url_for('views.add_article') }}" method="POST" role="form">
-            {{ form.hidden_tag() }}
-            <div class="form-group col-md-12 column">
+        <div class="form-group col-md-12 column">
+            <div class="row clearfix">
+                <div class="col-md-1 column">
+                </div>
                 <div class="row clearfix">
-                    <div class="col-md-1 column">
-                    </div>
-                    <label for="inputgsmc" class="col-sm-2 control-label">标题</label>
-                    <div class="row clearfix">
-                        <div class="col-md-12 column">
-                            <div class="col-md-1 column">
-                            </div>
-            				<div class="col-md-10 column">
-                                {{ form.title(class='form-control', placeholder="标题") }}
-            				</div>
+                    <div class="col-md-12 column">
+                        <div class="col-md-1 column">
                         </div>
+        				<div class="col-md-10 column">
+                            <h3 class="text-center">
+                        		{{ article.title }}
+                        	</h3>
+        				</div>
                     </div>
-    			</div>
-            </div>
-            <div class="form-group col-md-12 column">
+                </div>
+			</div>
+        </div>
+        <div class="form-group col-md-12 column">
+            <div class="row clearfix">
+                <div class="col-md-1 column">
+                </div>
                 <div class="row clearfix">
-                    <div class="col-md-1 column">
-                    </div>
-                    <label name="label" for="inputgsmc" class="col-sm-2 control-label">内容</label>
-                    <div class="row clearfix">
-                        <div class="col-md-12 column">
-                            <div class="col-md-1 column">
-                            </div>
-            				<div class="col-md-10 column">
-                                <div class="form-group">
-                                     <div class="row">
-                                         <div class="col-md-12">
-                                             {{ form.content(only_input=True, class="input-markdown form-control", rows=10, placeholder=form.content.label.text) }}
-                                         </div>
-                                         <div class="col-md-12">
-                                             {{ form.content(only_preview=True, class="input-markdown form-control") }}
-                                         </div>
+                    <div class="col-md-12 column">
+                        <div class="col-md-1 column">
+                        </div>
+        				<div class="col-md-10 column">
+                            <div class="form-group">
+                                 <div class="row">
+                                     <div class="col-md-12 flask-pagedown-preview">
+                                         {{ article.content }}
                                      </div>
-                                </div>
-            				</div>
-                        </div>
+                                 </div>
+                            </div>
+        				</div>
                     </div>
-    			</div>
-            </div>
-            <div class="form-group">
-                <div class="col-sm-6">
-                    {{ form.submit(class='btn btn-danger pull-right tb') }}
                 </div>
-                <div class="col-sm-6">
-                    <button name="reset" type="reset" class="btn btn-default pull-left">重置</button>
-                </div>
-            </div>
-        </form>
+			</div>
+        </div>
 	</div>
 </div>
 {% block page_content %}
